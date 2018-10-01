@@ -81,7 +81,7 @@ class TradeApi(object):
 
     #--------------------------------------------------------------
     def proccessReq(self,req):
-        """处理请求"""
+        """处理请求操作"""
         params,func,callback,reqid = req
 
 
