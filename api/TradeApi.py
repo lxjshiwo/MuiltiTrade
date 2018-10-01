@@ -72,7 +72,7 @@ class TradeApi(object):
             func:执行函数
             callback:回调函数
         """
-        if self.mode == self.ASYNC_MODE:
+        if self.mode == self.SYNC_MODE:
             self.reqid += 1
             req = (params,func,callback,self.reqid)
             self.queue.put(req)
@@ -83,11 +83,68 @@ class TradeApi(object):
     def proccessReq(self,req):
         """处理请求操作"""
         params,func,callback,reqid = req
-
+        result,data = func(params)
+        if result:
+            if data['status'] == 'ok':
+                callback(data['data'],reqid)
+            else:
+                msg = 'on error'
+                self.onError(msg,reqid)
+        else:
+            self.onError(data,reqid)
 
     #--------------------------------------------------------------
-    def login(self):
-        pass
+    def onError(self,msg,reqid):
+        """错误处理"""
+        print(msg,reqid)
+
+    #--------------------------------------------------------------
+    def login(self,params):
+        #返回格式
+        data = {}
+        #初始化相应登录参数
+        tradeIp = params['ip']
+        version = params['version']
+        usrName = params['username']
+        psWord = params['password']
+        txWord = params['txword']
+        yyb = params['yyb']
+        port = 7708
+        try:
+        #返回相应的用户账号
+            clientId = self.dll.JL_Login(bytes(tradeIp, 'ascii'),
+                                         port,
+                                         bytes(version, 'ascii'), 
+                                         bytes(usrName, 'ascii'),
+                                         bytes(psWord, 'ascii'),
+                                         bytes(txWord, 'ascii'),
+                                         bytes(yyb, 'ascii'))
+            data['status'] = 'ok'
+            data['data'] = clientId
+            return True,data
+        except Exception as e:
+            data['status'] = 'false'
+            data['data'] = 'error login'
+            return False,data
+    #--------------------------------------------------------------
+    def getLogin(self,ip,version,username,password,txword,yyb):
+        """用户登录"""
+        params = {
+                    'ip':ip,
+                    'version':version,
+                    'username':username,
+                    'password':password,
+                    'txword':txword,
+                    'yyb':yyb
+                    }
+        func = self.login
+        callback = self.onGetLogin
+        return self.addReq(params, func, callback)
+
+    #--------------------------------------------------------------
+    def onGetLogin(self,data):
+        print(data)
+
     
     #--------------------------------------------------------------
     def queryData(self):
@@ -100,4 +157,18 @@ class TradeApi(object):
     #--------------------------------------------------------------
     def sendOrder(self):
         pass
+
+if __name__ == "__main__":
+
+    tradeApi = TradeApi()
+    tradeApi.init()
+    clientId = tradeApi.dll.JL_Login(bytes('113.105.77.163', 'ascii'),
+                                         7708,
+                                         bytes('2.28', 'ascii'), 
+                                         bytes('50506031', 'ascii'),
+                                         bytes('375228', 'ascii'),
+                                         bytes('', 'ascii'),
+                                         bytes('0', 'ascii'))
+    print(clientId)
+
 
