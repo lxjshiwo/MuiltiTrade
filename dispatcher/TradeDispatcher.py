@@ -14,7 +14,9 @@ class TradeDispatcher(BaseDispatcher):
     #--------------------------------------------------------------
     def __init__(self,eventEngine):
         super(TradeDispatcher,self).__init__(eventEngine,'TradeDispatcher')
-
+        #信号引擎
+        self.eventEngine = eventEngine
+        self.eventEngine.start()
         #交易api
         self.tradeApi = None
 
@@ -38,6 +40,8 @@ class TradeDispatcher(BaseDispatcher):
     def init(self):
         #初始化数据
         self.accountRegister()
+        
+        
         #初始化相应的tradeApi
         self.tradeApi = TradeApi(self)
         self.tradeApi.init()
@@ -48,21 +52,44 @@ class TradeDispatcher(BaseDispatcher):
     
     def close(self):
         #关闭
+        self.eventEngine.stop()
         self.tradeApi.close()
+    #--------------------------------------------------------------
+    def registerLogin(self):
+        #注册相应的登录操作
+        self.eventEngine.register('eLogin',self.getClientId)
 
     #--------------------------------------------------------------
-    def getClientsId(self):
+    def startLogin(self):
+        event = Event()
+        event.type_ = 'eLogin'
+        self.eventEngine.put(event)
+
+    #--------------------------------------------------------------
+    def getClientId(self,event):
         if not self.selectedAccounts:
             return False
         else:
-            for username,info in self.selectedAccounts.items():
-                ip = info['ip']
-                version = info['version']
-                password = info['password']
-                txword = info['txword']
-                yyb = info['yyb']
-                self.tradeApi.getLogin(ip, version, username, password, txword, yyb)
-            return True
+            username,info = self.selectedAccounts.popitem()
+            ip = info['ip']
+            version = info['version']
+            password = info['password']
+            txword = info['txword']
+            yyb = info['yyb']
+            self.tradeApi.getLogin(ip, version, username, password, txword, yyb)
+
+
+#         if not self.selectedAccounts:
+#             return False
+#         else:
+#             for username,info in self.selectedAccounts.items():
+#                 ip = info['ip']
+#                 version = info['version']
+#                 password = info['password']
+#                 txword = info['txword']
+#                 yyb = info['yyb']
+#                 self.tradeApi.getLogin(ip, version, username, password, txword, yyb)
+#             return True
     
     #--------------------------------------------------------------
     def accountRegister(self):
@@ -99,6 +126,9 @@ class TradeApi(BaseApi):
     
     def onGetLogin(self, data, reqid):
         self.dispatcher.onGetClientId(data)
+        event = Event()
+        event.type_ = 'eLogin'
+        self.dispatcher.eventEngine.put(event)
         
         
         

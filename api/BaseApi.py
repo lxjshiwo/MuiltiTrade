@@ -9,8 +9,6 @@ from queue import Queue
 from multiprocessing.dummy import Pool
 from _ast import Try
 from _queue import Empty
-import time
-from _thread import RLock
 
 #封装相应的dll函数接口 
 class BaseApi(object):
