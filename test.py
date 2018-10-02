@@ -6,13 +6,27 @@ Created on 2018年10月1日
 '''
 
 from tkinter import *
-from api.TradeApi import *
+from api.BaseApi import *
+from dispatcher.TradeDispatcher import *
+from engine.EventEngine import EventEngine
 
 if __name__ == "__main__":
     root = Tk()
-    tradeApi = TradeApi()
+    eventEngine = EventEngine()
+    tDispatcher = TradeDispatcher(eventEngine)
+#     tDispatcher.init()
+#     tDispatcher.start()
+#     tDispatcher.selectedAccounts = {
+#                                     '50506031':{'ip':'113.105.77.163','version':'2.28','password':'375228','txword':'','yyb':'0'},
+#                                     '18041349':{'ip':'114.141.165.219','version':'2.28','password':'600006','txword':'','yyb':'78'},
+#                                     '18043120':{'ip':'114.141.165.219','version':'2.28','password':'330228','txword':'','yyb':'78'},
+#                                     }
+#     tDispatcher.getClientsId()
+    tradeApi = TradeApi(tDispatcher)
     tradeApi.init()
     tradeApi.start()
     tradeApi.getLogin('113.105.77.163','2.28','50506031','375228', '','0')
+    tradeApi.getLogin('113.105.77.163','2.28','50506031','375228', '','0')
     root.mainloop()
+
 

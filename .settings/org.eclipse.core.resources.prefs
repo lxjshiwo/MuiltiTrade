@@ -1,4 +1,9 @@
 eclipse.preferences.version=1
-encoding//api/TradeApi.py=utf-8
+encoding//api/BaseApi.py=utf-8
+encoding//dispatcher/BaseDispatcher.py=utf8
+encoding//dispatcher/TradeDispatcher.py=utf8
 encoding//engine/EventEngine.py=utf-8
+encoding//engine/EventType.py=utf8
+encoding//monitor/BaseMonitor.py=utf8
+encoding//monitor/LogMonitor.py=utf8
 encoding/test.py=utf-8

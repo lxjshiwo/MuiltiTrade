@@ -9,9 +9,11 @@ from queue import Queue
 from multiprocessing.dummy import Pool
 from _ast import Try
 from _queue import Empty
+import time
+from _thread import RLock
 
-#相应的交易api 封装相应的dll函数
-class TradeApi(object):
+#封装相应的dll函数接口 
+class BaseApi(object):
     
     BASE_DIR = './'
     
@@ -20,7 +22,7 @@ class TradeApi(object):
     SYNC_MODE = 'sync'
 
     #--------------------------------------------------------------
-    def __init__(self,):
+    def __init__(self):
         self.dll = None         #使用的dll
         self.mode = self.ASYNC_MODE #执行模式
         self.active = False         #API状态
@@ -32,8 +34,8 @@ class TradeApi(object):
     def init(self,dllType=None,mode =None):
         #使用的dll 初始化加载相应的dll
         if not dllType:
-            dll_path = self.BASE_DIR + "JLAPI.dll"
-            self.dll = windll.LoadLibrary(dll_path)
+            self.dll_path = self.BASE_DIR + "JLAPI.dll"
+            self.dll = windll.LoadLibrary(self.dll_path)
         #外后回加载相应其他类型dll
         else:
             pass
@@ -113,6 +115,7 @@ class TradeApi(object):
         port = 7708
         try:
         #返回相应的用户账号
+#             dll = windll.LoadLibrary(self.dll_path)
             clientId = self.dll.JL_Login(bytes(tradeIp, 'ascii'),
                                          port,
                                          bytes(version, 'ascii'), 
@@ -144,7 +147,8 @@ class TradeApi(object):
 
     #--------------------------------------------------------------
     def onGetLogin(self,data,reqid):
-        return data
+        """用户重载"""
+        pass
 
     
     #--------------------------------------------------------------
@@ -161,7 +165,7 @@ class TradeApi(object):
 
 if __name__ == "__main__":
 
-    tradeApi = TradeApi()
+    tradeApi = BaseApi()
     tradeApi.init()
     clientId = tradeApi.dll.JL_Login(bytes('113.105.77.163', 'ascii'),
                                          7708,
