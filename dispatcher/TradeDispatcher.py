@@ -32,8 +32,8 @@ class TradeDispatcher(BaseDispatcher):
         """
         self.registeredAccounts = {}
         
-        #账户登录号 
-        self.accountClientId = {}
+        #成功登录账户
+        self.accountInfo = {}
         
         
     #--------------------------------------------------------------
@@ -57,12 +57,12 @@ class TradeDispatcher(BaseDispatcher):
     #--------------------------------------------------------------
     def registerLogin(self):
         #注册相应的登录操作
-        self.eventEngine.register('eLogin',self.getClientId)
+        self.eventEngine.register(EVENT_LOGIN,self.getClientId)
 
     #--------------------------------------------------------------
     def startLogin(self):
         event = Event()
-        event.type_ = 'eLogin'
+        event.type_ = EVENT_LOGIN
         self.eventEngine.put(event)
 
     #--------------------------------------------------------------
@@ -77,8 +77,10 @@ class TradeDispatcher(BaseDispatcher):
             txword = info['txword']
             yyb = info['yyb']
             self.tradeApi.getLogin(ip, version, username, password, txword, yyb)
+            return True
 
 
+#多线程争夺资源问题
 #         if not self.selectedAccounts:
 #             return False
 #         else:
@@ -111,7 +113,11 @@ class TradeDispatcher(BaseDispatcher):
     #--------------------------------------------------------------
     def onGetClientId(self,data):
         #获取相应的用户登录id
-        print(data)
+        username = data[0]
+        params = data[1]
+        self.accountInfo[username] = params
+        print(self.accountInfo)
+        
 
 
 class TradeApi(BaseApi):
@@ -126,8 +132,9 @@ class TradeApi(BaseApi):
     
     def onGetLogin(self, data, reqid):
         self.dispatcher.onGetClientId(data)
+        #更新轮询
         event = Event()
-        event.type_ = 'eLogin'
+        event.type_ = EVENT_LOGIN
         self.dispatcher.eventEngine.put(event)
         
         

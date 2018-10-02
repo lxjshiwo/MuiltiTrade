@@ -12,3 +12,6 @@ EVENT_POSITION = 'ePosition.'           # 持仓回报事件
 EVENT_ACCOUNT = 'eAccount.'             # 账户回报事件
 EVENT_CONTRACT = 'eContract.'           # 合约基础信息回报事件
 EVENT_ERROR = 'eError.'                 # 错误回报事件
+
+#相应的调试信息
+EVENT_LOGIN = 'eLogin'                  #用于轮询登录

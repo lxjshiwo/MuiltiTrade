@@ -121,8 +121,9 @@ class BaseApi(object):
                                          bytes(psWord, 'ascii'),
                                          bytes(txWord, 'ascii'),
                                          bytes(yyb, 'ascii'))
+            params['clientId'] = clientId
             data['status'] = 'ok'
-            data['data'] = {usrName:clientId}
+            data['data'] = (usrName,params)
             return True,data
         except Exception as e:
             data['status'] = 'false'
