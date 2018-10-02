@@ -44,11 +44,11 @@ class TradeApi(object):
         return True
 
     #--------------------------------------------------------------
-    def start(self,number = 10):
+    def start(self,n= 10):
         self.active = True
         if self.mode == self.ASYNC_MODE:
-            self.pool = Pool(number)
-            self.pool.map_async(self.run,range(number)) 
+            self.pool = Pool(n)
+            self.pool.map_async(self.run,range(n)) 
 
     #--------------------------------------------------------------
     def close(self):
@@ -57,7 +57,8 @@ class TradeApi(object):
         self.pool.join()
 
     #--------------------------------------------------------------
-    def run(self):
+    def run(self,n):
+        """连续运行"""
         while self.active:
             try:
                 req = self.queue.get(timeout=1)
@@ -72,7 +73,7 @@ class TradeApi(object):
             func:执行函数
             callback:回调函数
         """
-        if self.mode == self.SYNC_MODE:
+        if self.mode == self.ASYNC_MODE:
             self.reqid += 1
             req = (params,func,callback,self.reqid)
             self.queue.put(req)
@@ -120,7 +121,7 @@ class TradeApi(object):
                                          bytes(txWord, 'ascii'),
                                          bytes(yyb, 'ascii'))
             data['status'] = 'ok'
-            data['data'] = clientId
+            data['data'] = {usrName:clientId}
             return True,data
         except Exception as e:
             data['status'] = 'false'
@@ -134,7 +135,7 @@ class TradeApi(object):
                     'version':version,
                     'username':username,
                     'password':password,
-                    'txword':txword,
+                    'txword':' ',
                     'yyb':yyb
                     }
         func = self.login
@@ -142,8 +143,8 @@ class TradeApi(object):
         return self.addReq(params, func, callback)
 
     #--------------------------------------------------------------
-    def onGetLogin(self,data):
-        print(data)
+    def onGetLogin(self,data,reqid):
+        return data
 
     
     #--------------------------------------------------------------
