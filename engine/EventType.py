@@ -15,3 +15,5 @@ EVENT_ERROR = 'eError.'                 # 错误回报事件
 
 #相应的调试信息
 EVENT_LOGIN = 'eLogin'                  #用于轮询登录
+EVENT_TRADE_PLAN ='eTradePlan'          #用于执行单个用户批量交易
+EVENT_TRADE_CANCEL = 'eCancelPlan'      #用于执行单个用户的批量撤销
