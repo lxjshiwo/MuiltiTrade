@@ -131,7 +131,7 @@ class BaseApi(object):
             data['data'] = 'error login'
             return False,data
     #--------------------------------------------------------------
-    def getLogin(self,ip,version,username,password,txword,yyb):
+    def getLogin(self,ip,version,username,password,txword,yyb,sz,sh):
         """用户登录"""
         params = {
                     'ip':ip,
@@ -139,7 +139,9 @@ class BaseApi(object):
                     'username':username,
                     'password':password,
                     'txword':' ',
-                    'yyb':yyb
+                    'yyb':yyb,
+                    'sz':sz,
+                    'sh':sh,
                     }
         func = self.login
         callback = self.onGetLogin
@@ -181,7 +183,6 @@ class BaseApi(object):
                 data['data'] = (userName,bookCode,0)
             return True,data
         except Exception as e:
-            print(e)
             data['status'] = 'false'
             data['data'] = 'error cancel'
             return False,data
@@ -238,7 +239,6 @@ class BaseApi(object):
             data['data'] = (username,output,stockCode,clientId)
             return True,data
         except Exception as e:
-            print(e)
             data['status'] = 'false'
             data['data'] = 'error login'
  
@@ -289,7 +289,7 @@ if __name__ == "__main__":
 #     status = tradeApi.dll.JL_QueryData(clientId,bytes('50506031','ascii'),104,ree)
     status = tradeApi.dll.JL_CancelOrder(clientId,
                                          bytes('50506031','ascii'),
-                                         bytes('30','ascii'),
+                                         bytes('62','ascii'),
                                          1,
                                          ree
                                          )

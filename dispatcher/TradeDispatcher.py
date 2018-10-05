@@ -8,12 +8,16 @@ Created on 2018年10月2日
 from dispatcher.BaseDispatcher import *
 from api.BaseApi import BaseApi
 from asyncio.tasks import sleep
+import os
+import json
 
 class TradeDispatcher(BaseDispatcher):
     #交易调度
     #--------------------------------------------------------------
-    def __init__(self,eventEngine):
+    def __init__(self,interface,eventEngine):
         super(TradeDispatcher,self).__init__(eventEngine,'TradeDispatcher')
+        #界面
+        self.interface = interface
         #信号引擎
         self.eventEngine = eventEngine
         self.eventEngine.start()
@@ -60,7 +64,7 @@ class TradeDispatcher(BaseDispatcher):
     def init(self):
         #初始化数据
         self.accountRegister()
-        
+        self.stocksRegister()
         
         #初始化相应的tradeApi
         self.tradeApi = TradeApi(self)
@@ -120,7 +124,9 @@ class TradeDispatcher(BaseDispatcher):
             password = info['password']
             txword = info['txword']
             yyb = info['yyb']
-            self.tradeApi.getLogin(ip, version, username, password, txword, yyb)
+            sz = info['sz']
+            sh = info['sh']
+            self.tradeApi.getLogin(ip, version, username, password, txword, yyb,sz,sh)
             return True
 
 
@@ -173,19 +179,47 @@ class TradeDispatcher(BaseDispatcher):
     #--------------------------------------------------------------
     def accountRegister(self):
         #加载相应的分配账户
-        pass
+#         filename = os.getcwd() + '/DispatcherCache/'+'RegisterAccounts.json'
+        filename =  '../DispatcherCache/'+'RegisterAccounts.json'
+        try:
+            f = open(filename,'r')
+            self.registeredAccounts = json.load(f)
+        except IOError:
+            pass
+        return self.registeredAccounts
+
+    #--------------------------------------------------------------
+    def stocksRegister(self):
+        #加载相应的股票计划
+#         filename = os.getcwd() + '/DispatcherCache/' + 'TargetStocks.json'
+        filename = '../DispatcherCache/' + 'TargetStocks.json'
+        try:
+            f = open(filename,'r')
+            self.targetStocks = json.load(f)
+        except IOError:
+            pass 
+        return self.targetStocks
+
 
 
 
     #--------------------------------------------------------------
-    def addActiveUser(self):
+    def addActiveAccount(self,username):
         """增加激活用户"""
-        pass
+        try:
+            selectedAccount = self.registeredAccounts[username]
+            self.selectedAccounts[username] = selectedAccount
+        except KeyError:
+            pass
     
     #--------------------------------------------------------------
-    def removeActiveUser(self):
+    def removeActiveAccount(self,username):
         """删除激活用户"""
-        pass
+        try:
+            del self.selectedAccounts[username]
+            print(self.selectedAccounts)
+        except Exception as e:
+            pass
     
     #--------------------------------------------------------------
     def onGetClientId(self,data):
@@ -194,6 +228,7 @@ class TradeDispatcher(BaseDispatcher):
         params = data[1]
         self.accountInfo[username] = params
         print(self.accountInfo)
+        self.interface.addLog(username + "登录成功\n")
     #--------------------------------------------------------------
     def onGetTrade(self,data,reqid):
         #获取完成相应的用户交易
@@ -210,6 +245,7 @@ class TradeDispatcher(BaseDispatcher):
         except KeyError:
             bookList = []
             self.activeBookCodeLists[username] = bookList
+            self.interface.addLog(username + "完成" + stockcode +"委托\n")
         
         if not content.isdigit():
             print("error data %s" %content)
@@ -224,9 +260,11 @@ class TradeDispatcher(BaseDispatcher):
         if not status == 1:
             outstr = "%s 未取消 %s 委托" %(username,bookcode)
             print(outstr)
+            self.interface.addLog(username + "未完成" + bookcode +"委托撤销\n")
         else:
             outstr = "%s 取消 %s 委托" %(username,bookcode)
             print(outstr)
+            self.interface.addLog(username + "完成" + bookcode +"委托撤销\n")
         #往队列中发出清空下一用户的全部委托单
         userLen = self.selectedAccountsLen
         stockLen = len(self.targetStocks)

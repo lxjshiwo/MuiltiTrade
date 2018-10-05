@@ -19,8 +19,8 @@ if __name__ == "__main__":
     tDispatcher.start()
     tDispatcher.selectedAccounts = {
                                     '50506031':{'ip':'113.105.77.163','version':'2.28','password':'375228','txword':'','yyb':'0','sz':'','sh':''},
-                                    '18041349':{'ip':'114.141.165.219','version':'2.28','password':'600006','txword':'','yyb':'78','sz':'','sh':''},
-                                    '18043120':{'ip':'114.141.165.219','version':'2.28','password':'330228','txword':'','yyb':'78','sz':'','sh':''},
+#                                     '18041349':{'ip':'114.141.165.219','version':'2.28','password':'600006','txword':'','yyb':'78','sz':'','sh':''},
+#                                     '18043120':{'ip':'114.141.165.219','version':'2.28','password':'330228','txword':'','yyb':'78','sz':'','sh':''},
                                     }
     tDispatcher.targetStocks = {
                                     '000100':{
