@@ -10,6 +10,7 @@ from api.BaseApi import BaseApi
 from asyncio.tasks import sleep
 import os
 import json
+import threading
 
 class TradeDispatcher(BaseDispatcher):
     #交易调度
@@ -58,6 +59,8 @@ class TradeDispatcher(BaseDispatcher):
             'username3':['bookOrder1',...]
         }
         """
+        #创建相应的内部线程锁
+        self.lock = threading.Lock()
         
         
     #--------------------------------------------------------------
@@ -163,7 +166,11 @@ class TradeDispatcher(BaseDispatcher):
     #--------------------------------------------------------------
     def getCancel(self,event):
         try:
+            exchangetype = 1
             userName,bookList = self.activeBookCodeLists.popitem()
+            if not bookList:
+                self.startCancel()
+                return 
             for entity in bookList:
                 bookCode,stockCode,clientId = entity
                 #判断为上海或者深圳
@@ -173,6 +180,7 @@ class TradeDispatcher(BaseDispatcher):
                     exchangeType = 1
                 self.tradeApi.getCancelOrder(userName, bookCode, exchangetype,clientId)
         except Exception as e:
+            print(e)
             pass
 
         
@@ -240,19 +248,21 @@ class TradeDispatcher(BaseDispatcher):
             event.type_ = EVENT_TRADE_PLAN
             self.eventEngine.put(event)
         username,content,stockcode,clientid = data
+        self.lock.acquire()
         try:
             bookList = self.activeBookCodeLists[username]
         except KeyError:
             bookList = []
             self.activeBookCodeLists[username] = bookList
             self.interface.addLog(username + "完成" + stockcode +"委托\n")
-        
+        self.lock.release()
         if not content.isdigit():
             print("error data %s" %content)
         else:
             book = (content,stockcode,clientid)
             bookList.append(book)
             print(content)
+        print(self.activeBookCodeLists)
     #--------------------------------------------------------------
     def onGetCancel(self,data,reqid):
         #取消成功

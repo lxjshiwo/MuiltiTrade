@@ -211,6 +211,7 @@ class InterfaceController(object):
         self.dispatcher.startTrade()
     
     def trade_cancel_btn_down(self,event):
+        print(self.dispatcher.activeBookCodeLists)
         #结束相应的交易
         self.dispatcher.startCancel()
     
@@ -229,6 +230,7 @@ class InterfaceController(object):
     def addTargetStock(self,event):
         top = Toplevel()
         top.title('新增股票')
+        top.resizable(False,False)
         
         self.targetStock = StringVar()
         self.targetPrice = StringVar()

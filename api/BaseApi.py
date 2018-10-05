@@ -289,7 +289,7 @@ if __name__ == "__main__":
 #     status = tradeApi.dll.JL_QueryData(clientId,bytes('50506031','ascii'),104,ree)
     status = tradeApi.dll.JL_CancelOrder(clientId,
                                          bytes('50506031','ascii'),
-                                         bytes('62','ascii'),
+                                         bytes('86','ascii'),
                                          1,
                                          ree
                                          )
