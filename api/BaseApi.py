@@ -164,6 +164,7 @@ class BaseApi(object):
         bookCode = params['bookcode']
         exchangeType = params['exchangetype']
         clientId = params['clientid']
+        stockCode = params['stockcode']
         try:
             output = create_string_buffer(1024*1024)
             memset(ctypes.byref(output),0x0,1024*1024)
@@ -176,24 +177,25 @@ class BaseApi(object):
             output = output.value.decode('gbk')
             if output.__eq__('ok'):
                 data['status'] = 'ok'
-                data['data'] = (userName,bookCode,1)
+                data['data'] = (userName,bookCode,stockCode,1)
                 return True,data
             else:
                 data['status'] = 'ok'
-                data['data'] = (userName,bookCode,0)
+                data['data'] = (userName,bookCode,stockCode,0)
             return True,data
         except Exception as e:
             data['status'] = 'false'
             data['data'] = 'error cancel'
             return False,data
     #--------------------------------------------------------------
-    def getCancelOrder(self,username,bookcode,exchangetype,clientId):
+    def getCancelOrder(self,username,bookcode,exchangetype,clientId,stockCode):
 
         params = {
                    'username' :username,
                    'bookcode':bookcode,
                    'exchangetype':exchangetype,
                    'clientid':clientId,
+                   'stockcode':stockCode,
                    }
 
         func = self.cancelOrder
@@ -289,7 +291,7 @@ if __name__ == "__main__":
 #     status = tradeApi.dll.JL_QueryData(clientId,bytes('50506031','ascii'),104,ree)
     status = tradeApi.dll.JL_CancelOrder(clientId,
                                          bytes('50506031','ascii'),
-                                         bytes('86','ascii'),
+                                         bytes('102','ascii'),
                                          1,
                                          ree
                                          )

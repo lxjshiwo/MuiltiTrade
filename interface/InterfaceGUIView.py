@@ -12,7 +12,7 @@ import os
 import json
 from dispatcher.TradeDispatcher import TradeDispatcher
 from engine.EventEngine import EventEngine
-from engine.EventType import EVENT_LOGIN
+from engine.EventType import EVENT_LOGIN,EVENT_GUI_LOGIN
 import datetime
 from sqlalchemy.sql.expression import column
 
@@ -125,7 +125,7 @@ class InterfaceController(object):
         self.eventEngine  = EventEngine()
     
     def registerFunc(self):
-        self.dispatcher.eventEngine.register('eGuiLogin',self.initGuiUser)
+        self.dispatcher.eventEngine.register(EVENT_GUI_LOGIN,self.initGuiUser)
         self.dispatcher.eventEngine.register(EVENT_LOGIN,self.loginStatus)
     
     def init(self):
@@ -141,7 +141,7 @@ class InterfaceController(object):
         
         
         event = Event()
-        event.type_ = 'eGuiLogin'
+        event.type_ = EVENT_GUI_LOGIN
         self.dispatcher.eventEngine.put(event)
     
     def initGuiUser(self,event):
@@ -290,7 +290,8 @@ class InterfaceController(object):
     
     def saveTargetStock(self,event):
         try:
-            filename = '../DispatcherCache/'+'TargetStocks.json'
+            filename = os.getcwd() + '/DispatcherCache/'+'TargetStocks.json'
+#             filename = '../DispatcherCache/'+'TargetStocks.json'
             f = open(filename,'w')
             json.dump(self.dispatcher.targetStocks,f)
         except EXCEPTION as e:

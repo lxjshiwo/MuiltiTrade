@@ -178,7 +178,7 @@ class TradeDispatcher(BaseDispatcher):
                     exchangetype = 0
                 else:
                     exchangeType = 1
-                self.tradeApi.getCancelOrder(userName, bookCode, exchangetype,clientId)
+                self.tradeApi.getCancelOrder(userName, bookCode, exchangetype,clientId,stockCode)
         except Exception as e:
             print(e)
             pass
@@ -187,8 +187,8 @@ class TradeDispatcher(BaseDispatcher):
     #--------------------------------------------------------------
     def accountRegister(self):
         #加载相应的分配账户
-#         filename = os.getcwd() + '/DispatcherCache/'+'RegisterAccounts.json'
-        filename =  '../DispatcherCache/'+'RegisterAccounts.json'
+        filename = os.getcwd() + '/DispatcherCache/'+'RegisterAccounts.json'
+#         filename =  '../DispatcherCache/'+'RegisterAccounts.json'
         try:
             f = open(filename,'r')
             self.registeredAccounts = json.load(f)
@@ -199,8 +199,8 @@ class TradeDispatcher(BaseDispatcher):
     #--------------------------------------------------------------
     def stocksRegister(self):
         #加载相应的股票计划
-#         filename = os.getcwd() + '/DispatcherCache/' + 'TargetStocks.json'
-        filename = '../DispatcherCache/' + 'TargetStocks.json'
+        filename = os.getcwd() + '/DispatcherCache/' + 'TargetStocks.json'
+#         filename = '../DispatcherCache/' + 'TargetStocks.json'
         try:
             f = open(filename,'r')
             self.targetStocks = json.load(f)
@@ -254,27 +254,28 @@ class TradeDispatcher(BaseDispatcher):
         except KeyError:
             bookList = []
             self.activeBookCodeLists[username] = bookList
-            self.interface.addLog(username + "完成" + stockcode +"委托\n")
         self.lock.release()
         if not content.isdigit():
             print("error data %s" %content)
+            self.interface.addLog(username + "未完成" + stockcode +"委托\n")
         else:
             book = (content,stockcode,clientid)
             bookList.append(book)
+            self.interface.addLog(username + "完成" + stockcode +"委托\n")
             print(content)
         print(self.activeBookCodeLists)
     #--------------------------------------------------------------
     def onGetCancel(self,data,reqid):
         #取消成功
-        username,bookcode,status = data
+        username,bookcode,stockcode,status = data
         if not status == 1:
             outstr = "%s 未取消 %s 委托" %(username,bookcode)
             print(outstr)
-            self.interface.addLog(username + "未完成" + bookcode +"委托撤销\n")
+            self.interface.addLog(username + "未完成"+ stockcode +":" + bookcode +"委托撤销\n")
         else:
             outstr = "%s 取消 %s 委托" %(username,bookcode)
             print(outstr)
-            self.interface.addLog(username + "完成" + bookcode +"委托撤销\n")
+            self.interface.addLog(username + "完成"+ stockcode +":" + bookcode +"委托撤销\n")
         #往队列中发出清空下一用户的全部委托单
         userLen = self.selectedAccountsLen
         stockLen = len(self.targetStocks)
