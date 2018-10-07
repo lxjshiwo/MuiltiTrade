@@ -79,11 +79,11 @@ class InterfaceView(object):
         self.target_plan.grid(column = 0,row = 3,columnspan = 3)
         #相应的操作
         self.addButton = Button(middle_frame,text = "+增加股票")
-        self.addButton.grid(column = 0,row = 4)
+        self.addButton.grid(column = 0,row = 4,pady = 5)
         self.delButton = Button(middle_frame,text = "-减去股票")
-        self.delButton.grid(column = 1,row = 4)
+        self.delButton.grid(column = 1,row = 4,pady = 5)
         self.saveButton= Button(middle_frame,text="保存计划")
-        self.saveButton.grid(column = 2,row = 4)
+        self.saveButton.grid(column = 2,row = 4,pady = 5)
 
     def init_down_gui(self):
         down_frame = Frame(self.window)
@@ -92,20 +92,20 @@ class InterfaceView(object):
         Label(down_frame,text='操作结果').grid(row = 0,column = 0,sticky='w',padx = 5)
         #输出结果框
         #选择用户表
-        self.res_out_txt =  Text(down_frame,width = 52,height=5)
+        self.res_out_txt =  Text(down_frame,width = 50,height=5)
         self.res_out_txt.grid(row = 1,column = 0,columnspan = 5,padx=5)
         self.res_out_txt.insert(END,"暂时未有成交记录\n")
         self.res_out_txt.insert(END,"等待交易")
 
         #启动按键
-        self.login_btn = Button(down_frame,text = '启动选择用户',width = 52)
+        self.login_btn = Button(down_frame,text = '启动选择用户',width = 50)
         self.login_btn.grid(row = 2,column = 0,columnspan = 5,pady = 5)
 
         #执行交易按键
-        self.trade_btn = Button(down_frame,text = '计划交易下单',width = 52)
+        self.trade_btn = Button(down_frame,text = '计划交易下单',width = 50)
         self.trade_btn.grid(row = 3,column = 0,columnspan = 5,pady = 5)
         #取消委托
-        self.trade_cancel_btn = Button(down_frame,text = '撤销委托下单',width = 52)
+        self.trade_cancel_btn = Button(down_frame,text = '撤销委托下单',width = 50)
         self.trade_cancel_btn.grid(row = 4,column = 0,columnspan = 5,pady = 5)
     
     
