@@ -14,7 +14,6 @@ from dispatcher.TradeDispatcher import TradeDispatcher
 from engine.EventEngine import EventEngine
 from engine.EventType import EVENT_LOGIN,EVENT_GUI_LOGIN
 import datetime
-from sqlalchemy.sql.expression import column
 
 
 class InterfaceView(object):
