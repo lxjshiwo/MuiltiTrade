@@ -273,6 +273,8 @@ class InterfaceController(object):
         infoEntity['price'] = float(price)
         infoEntity['amount'] = int(amount)
         infoEntity['side'] = side
+        if len(stockcode) < 6:
+            stockcode = "0"*(6-len(stockcode)) + stockcode
         self.dispatcher.targetStocks[stockcode] = infoEntity
         self.initTradePlan()
 
