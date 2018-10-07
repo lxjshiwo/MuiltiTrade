@@ -270,8 +270,8 @@ class InterfaceController(object):
             side = 0
         else:
             side = 1
-        infoEntity['price'] = price
-        infoEntity['amount'] = amount
+        infoEntity['price'] = float(price)
+        infoEntity['amount'] = int(amount)
         infoEntity['side'] = side
         self.dispatcher.targetStocks[stockcode] = infoEntity
         self.initTradePlan()

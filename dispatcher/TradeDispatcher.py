@@ -147,6 +147,7 @@ class TradeDispatcher(BaseDispatcher):
 #             return True
     #--------------------------------------------------------------
     def getTrade(self,event):
+        print(self.targetStocks)
         try:
             username,info = self.accountInfo.popitem()
             for stockcode,plan in self.targetStocks.items():
