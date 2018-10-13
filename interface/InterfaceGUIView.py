@@ -31,6 +31,8 @@ class InterfaceView(object):
         self.all_select_user_index = []
         #当前操作用户
         self.selectedAccounts = {}
+        #股票池
+        self.targetStockPool = {}
         #controller
         self.controller = controller
         
@@ -79,8 +81,8 @@ class InterfaceView(object):
         self.target_plan = Listbox(middle_frame,listvariable = self.target_stock,width = 50)
         self.target_plan.grid(column = 0,row = 3,columnspan = 4)
         #相应的操作
-        self.addButton = Button(middle_frame,text = "+增加股票")
-        self.addButton.grid(column = 0,row = 4,pady = 5)
+        self.modifyButton = Button(middle_frame,text = "配置股票")
+        self.modifyButton.grid(column = 0,row = 4,pady = 5)
         self.delButton = Button(middle_frame,text = "-减去股票")
         self.delButton.grid(column = 1,row = 4,pady = 5)
         self.loadButton= Button(middle_frame,text="读取计划")
@@ -127,12 +129,40 @@ class InterfaceView(object):
         self.confirmChooseButton.grid(column = 1,row = 1,sticky=E)
         
         self.controller.registerTradeFileFunc()
+    
+    def showModifyStocksWidget(self):
+        top = Toplevel()
+        top.resizable(False,False)
+        self.stockPool = StringVar()
+        self.stockPoolList = Listbox(top,width=50,listvariable=self.stockPool,selectmode=SINGLE)
+        self.stockPoolList.grid(column = 0,row = 0,columnspan = 2)
+        
+        self.chooseButton = Button(top,text='入选股票')
+        self.chooseButton.grid(column = 0,row = 1)
+
+        self.addButton = Button(top,text='加入股票')
+        self.addButton.grid(column = 1,row = 1)
+        
+        self.controller.registerTargetStocksFunc()
+
 
     def addTradeFiles(self,fileNames):
         self.filesList.delete(0,END)
         if fileNames != None:
             for fileName in fileNames:
                 self.filesList.insert(END,fileName)
+    
+    def addModifyStocksWidget(self,stockPool):
+        self.stockPoolList.delete(0,END)
+        for key,value in stockPool.items():
+            outstr = ''
+            if value['side'] == 0:
+                outstr = str(key) + ":" + " "*4 +"以价格" + str(value['price'])+ " 元 " + "买入" + str(value['amount']) + " 股"
+            else:
+                outstr = str(key) + ":" + " "*4 +"以价格" + str(value['price'])+ " 元"  +" 卖出" + str(value['amount']) + " 股"
+            self.stockPoolList.insert(END,outstr)
+
+    
 
 
     
@@ -196,7 +226,8 @@ class InterfaceController(object):
         self.interface.trade_cancel_btn.bind('<Button-1>',self.trade_cancel_btn_down)
         self.interface.login_btn.bind('<Button-1>',self.login_btn_down)
         #操作股票操作按键
-        self.interface.addButton.bind('<Button-1>',self.addTargetStock)
+#         self.interface.addButton.bind('<Button-1>',self.addTargetStock)
+        self.interface.modifyButton.bind('<Button-1>',self.modifyTargetStocks)
         self.interface.delButton.bind('<Button-1>',self.delTargetStock)
         self.interface.saveButton.bind('<Button-1>',self.saveTargetStock)
         self.interface.loadButton.bind('<Button-1>',self.loadTradeFile)
@@ -286,6 +317,7 @@ class InterfaceController(object):
         self.confirmAddButton.grid(column = 3,row =2,pady = 2)
         
     def addPlanStock(self):
+        #未加入股票池概念
         infoEntity = {}
         stockcode = self.stockEntry.get()
         price = self.priceEntry.get()
@@ -300,8 +332,10 @@ class InterfaceController(object):
         infoEntity['side'] = side
         if len(stockcode) < 6:
             stockcode = "0"*(6-len(stockcode)) + stockcode
-        self.dispatcher.targetStocks[stockcode] = infoEntity
-        self.initTradePlan()
+        self.interface.targetStockPool[stockcode] = infoEntity
+        self.interface.addModifyStocksWidget(self.interface.targetStockPool)
+        
+
 
     def delTargetStock(self,event):
         try:
@@ -358,21 +392,38 @@ class InterfaceController(object):
     def chooseTradeFile(self,event):
         fileIndex = self.interface.filesList.curselection()
         fileName = self.interface.filesList.get(fileIndex) + '.json'
-        file = os.getcwd() + '\TradePlan\\' + fileName
+        file = os.getcwd() + "/TradePlan/" + fileName
         print(file)
         try:
             f = open(file,'r')
-            tmpTargetStocks = json.load(f)
-            self.dispatcher.targetStocks.clear()
-            self.dispatcher.targetStocks = tmpTargetStocks
-            self.interface.all_target_stocks.clear()
-            self.interface.all_target_stocks = tmpTargetStocks
-            self.initTradePlan()
+            stockPool = json.load(f)
+            self.interface.targetStockPool.clear()
+            self.interface.targetStockPool = stockPool
+            self.interface.addModifyStocksWidget(stockPool)
         except IOError:
-            print(IOError)
+            pass
     
     def registerTradeFileFunc(self):
         self.interface.confirmChooseButton.bind('<Button-1>',self.chooseTradeFile)
+        
+    
+    def modifyTargetStocks(self,event):
+        self.interface.showModifyStocksWidget()
+        self.interface.addModifyStocksWidget()
+    
+    def registerTargetStocksFunc(self):
+        self.interface.chooseButton.bind('<Button-1>',self.chooseTargetStock)
+        self.interface.addButton.bind('<Button-1>',self.addTargetStock)
+    
+    
+    def chooseTargetStock(self,event):
+        stockIndex = self.interface.stockPoolList.curselection()
+        stockInfo = self.interface.stockPoolList.get(stockIndex)
+        stockCode = stockInfo.split(":")[0]
+        infoEntity = self.interface.targetStockPool[stockCode]
+        self.dispatcher.targetStocks[stockCode] = infoEntity
+        self.initTradePlan()
+
 
 
 if __name__ == "__main__":
