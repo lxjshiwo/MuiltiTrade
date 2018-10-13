@@ -18,7 +18,7 @@ import datetime
 
 class InterfaceView(object):
     
-    def __init__(self):
+    def __init__(self,controller):
         self.window = tk.Tk()
         self.window.title('Trade')
         self.window.resizable(False,False)
@@ -31,6 +31,8 @@ class InterfaceView(object):
         self.all_select_user_index = []
         #当前操作用户
         self.selectedAccounts = {}
+        #controller
+        self.controller = controller
         
         self.init_gui()
 
@@ -39,7 +41,6 @@ class InterfaceView(object):
         #初始化相应的基本数据
         self.all_user_info = all_user_info
         self.all_target_stocks = targetStocks
-
 
     
     #初始化相应的界面     
@@ -76,14 +77,16 @@ class InterfaceView(object):
         #相应输入框
         self.target_stock = StringVar()
         self.target_plan = Listbox(middle_frame,listvariable = self.target_stock,width = 50)
-        self.target_plan.grid(column = 0,row = 3,columnspan = 3)
+        self.target_plan.grid(column = 0,row = 3,columnspan = 4)
         #相应的操作
         self.addButton = Button(middle_frame,text = "+增加股票")
         self.addButton.grid(column = 0,row = 4,pady = 5)
         self.delButton = Button(middle_frame,text = "-减去股票")
         self.delButton.grid(column = 1,row = 4,pady = 5)
+        self.loadButton= Button(middle_frame,text="读取计划")
+        self.loadButton.grid(column = 2,row = 4,pady = 5)
         self.saveButton= Button(middle_frame,text="保存计划")
-        self.saveButton.grid(column = 2,row = 4,pady = 5)
+        self.saveButton.grid(column = 3,row = 4,pady = 5)
 
     def init_down_gui(self):
         down_frame = Frame(self.window)
@@ -108,11 +111,31 @@ class InterfaceView(object):
         self.trade_cancel_btn = Button(down_frame,text = '撤销委托下单',width = 50)
         self.trade_cancel_btn.grid(row = 4,column = 0,columnspan = 5,pady = 5)
     
-    
     def addRes(self,data):
         now = datetime.datetime.now().strftime("%H:%M:%S")
         outstr = now +  ':' + data
         self.res_out_txt.insert(END,outstr)
+    
+    def showTradeFilesWidget(self):
+        top = Toplevel()
+        top.resizable(False,False)
+        self.fileDir = StringVar()
+        filesDir = StringVar()
+        self.filesList = Listbox(top,listvariable=filesDir,selectmode=SINGLE,width=20)
+        self.filesList.grid(column = 0,row = 0,columnspan = 2)
+        self.confirmChooseButton = Button(top,text='载入计划')
+        self.confirmChooseButton.grid(column = 1,row = 1,sticky=E)
+        
+        self.controller.registerTradeFileFunc()
+
+    def addTradeFiles(self,fileNames):
+        self.filesList.delete(0,END)
+        if fileNames != None:
+            for fileName in fileNames:
+                self.filesList.insert(END,fileName)
+
+
+    
    
 
 
@@ -135,7 +158,7 @@ class InterfaceController(object):
         #初始化所有的用户信息
         all_user_info = self.dispatcher.accountRegister()
         targetStocks = self.dispatcher.stocksRegister()
-        self.interface = InterfaceView()
+        self.interface = InterfaceView(self)
         self.interface.init(all_user_info,targetStocks)
         
         
@@ -176,6 +199,8 @@ class InterfaceController(object):
         self.interface.addButton.bind('<Button-1>',self.addTargetStock)
         self.interface.delButton.bind('<Button-1>',self.delTargetStock)
         self.interface.saveButton.bind('<Button-1>',self.saveTargetStock)
+        self.interface.loadButton.bind('<Button-1>',self.loadTradeFile)
+        #配置交易计划文件
         self.interface.window.mainloop()
     
     #按键操作函数
@@ -265,9 +290,10 @@ class InterfaceController(object):
         stockcode = self.stockEntry.get()
         price = self.priceEntry.get()
         amount = self.amountEntry.get()
+        side = int()
         if self.sideCombo.get() == "买入":
             side = 0
-        else:
+        else :
             side = 1
         infoEntity['price'] = float(price)
         infoEntity['amount'] = int(amount)
@@ -291,7 +317,8 @@ class InterfaceController(object):
     
     def saveTargetStock(self,event):
         try:
-            filename = os.getcwd() + '/DispatcherCache/'+'TargetStocks.json'
+            todayfile = datetime.datetime.now().strftime("%Y-%m-%d") + '.json'
+            filename = os.getcwd() + '/TradePlan/'+ todayfile
 #             filename = '../DispatcherCache/'+'TargetStocks.json'
             f = open(filename,'w')
             json.dump(self.dispatcher.targetStocks,f)
@@ -300,6 +327,53 @@ class InterfaceController(object):
     
     def tradeStatus(self):
         pass
+    
+    
+    
+    def loadTradeFile(self,event):
+        self.interface.showTradeFilesWidget()
+        fileNames = self.loadFiles()
+        self.interface.addTradeFiles(fileNames)
+       
+
+
+        
+
+    def loadFiles(self):
+
+        filesDir = os.getcwd()
+        filesDir = filesDir + "/TradePlan"
+        fileNames = []
+
+        try:
+            for root,dirs,files in os.walk(filesDir):
+                for file in files:
+                    fileName = os.path.splitext(file)
+                    if fileName[1] == '.json':
+                        fileNames.append(fileName[0])
+            return fileNames
+        except EXCEPTION as e:
+            return None
+
+    def chooseTradeFile(self,event):
+        fileIndex = self.interface.filesList.curselection()
+        fileName = self.interface.filesList.get(fileIndex) + '.json'
+        file = os.getcwd() + '\TradePlan\\' + fileName
+        print(file)
+        try:
+            f = open(file,'r')
+            tmpTargetStocks = json.load(f)
+            self.dispatcher.targetStocks.clear()
+            self.dispatcher.targetStocks = tmpTargetStocks
+            self.interface.all_target_stocks.clear()
+            self.interface.all_target_stocks = tmpTargetStocks
+            self.initTradePlan()
+        except IOError:
+            print(IOError)
+    
+    def registerTradeFileFunc(self):
+        self.interface.confirmChooseButton.bind('<Button-1>',self.chooseTradeFile)
+
 
 if __name__ == "__main__":
     tmp = InterfaceController()

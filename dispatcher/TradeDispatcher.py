@@ -88,6 +88,8 @@ class TradeDispatcher(BaseDispatcher):
         #注册相应的登录操作
         #登录操作
         self.eventEngine.register(EVENT_LOGIN,self.getClientId)
+        #登出操作
+        self.eventEngine.register('EVENT_QUIT_LOGIN',self.getQuitLogin)
         #交易操作
         self.eventEngine.register(EVENT_TRADE_PLAN,self.getTrade)
         #撤单操作
@@ -99,7 +101,12 @@ class TradeDispatcher(BaseDispatcher):
         event = Event()
         event.type_ = EVENT_LOGIN
         self.eventEngine.put(event)
-    
+    #--------------------------------------------------------------
+    def startQuitLogin(self,quitInfo):
+        event = Event()
+        event.type_ = 'EVENT_QUIT_LOGIN'
+        event.dict_ = quitInfo
+        self.eventEngine.put(event)
     #--------------------------------------------------------------
     def startTrade(self):
         #开始交易
@@ -115,6 +122,8 @@ class TradeDispatcher(BaseDispatcher):
         event.type_ = EVENT_TRADE_CANCEL
         self.eventEngine.put(event)
     
+    
+
 
     #--------------------------------------------------------------
     def getClientId(self,event):
@@ -146,6 +155,13 @@ class TradeDispatcher(BaseDispatcher):
 #                 self.tradeApi.getLogin(ip, version, username, password, txword, yyb)
 #             return True
     #--------------------------------------------------------------
+    def getQuitLogin(self,event):
+        userName = event.dict_['username']
+        clientId = event.dict_['clientId']
+        self.tradeApi.getQuitLogin(userName, clientId)
+        
+
+    #--------------------------------------------------------------
     def getTrade(self,event):
         print(self.targetStocks)
         try:
@@ -158,8 +174,10 @@ class TradeDispatcher(BaseDispatcher):
                 stockAmount = plan['amount']
                 stockSide = plan['side']
                 if stockcode[0] == '3' or stockcode == '0':
+                    print(stockSide)
                     self.tradeApi.getSendOrder(username,szCode, stockcode, stockPrice, stockAmount, stockSide, clientId)
                 else:
+                    print(stockSide)
                     self.tradeApi.getSendOrder(username,shCode, stockcode, stockPrice, stockAmount, stockSide, clientId)
             return True
         except Exception as e:
@@ -229,7 +247,14 @@ class TradeDispatcher(BaseDispatcher):
             print(self.selectedAccounts)
         except Exception as e:
             pass
+        try:
+            quitInfo = self.accountInfo[username] 
+            del self.accountInfo[username]
+            self.startQuitLogin(quitInfo)
+        except KeyError:
+            pass
     
+
     #--------------------------------------------------------------
     def onGetClientId(self,data):
         #获取相应的用户登录id
@@ -238,6 +263,18 @@ class TradeDispatcher(BaseDispatcher):
         self.accountInfo[username] = params
         print(self.accountInfo)
         self.interface.addLog(username + "登录成功\n")
+    #--------------------------------------------------------------
+    def onGetQuitLogin(self,data,reqid):
+        userName,status = data
+        if status == 1:
+            outstr = userName + "登出成功"
+            self.interface.addLog(outstr)
+        else:
+            outstr = userName + "登出失败"
+            self.interface.addLog(outstr)
+
+
+        
     #--------------------------------------------------------------
     def onGetTrade(self,data,reqid):
         #获取完成相应的用户交易
@@ -271,11 +308,9 @@ class TradeDispatcher(BaseDispatcher):
         username,bookcode,stockcode,status = data
         if not status == 1:
             outstr = "%s 未取消 %s 委托" %(username,bookcode)
-            print(outstr)
             self.interface.addLog(username + "未完成"+ stockcode +":" + bookcode +"委托撤销\n")
         else:
             outstr = "%s 取消 %s 委托" %(username,bookcode)
-            print(outstr)
             self.interface.addLog(username + "完成"+ stockcode +":" + bookcode +"委托撤销\n")
         #往队列中发出清空下一用户的全部委托单
         userLen = self.selectedAccountsLen
@@ -285,8 +320,8 @@ class TradeDispatcher(BaseDispatcher):
             event = Event()
             event.type_ = EVENT_TRADE_CANCEL
             self.eventEngine.put(event)
-
-        
+    
+   
         
         
         
@@ -316,6 +351,13 @@ class TradeApi(BaseApi):
     #--------------------------------------------------------------------------------------------- 
     def onCancelOrder(self,data,reqid):
         self.dispatcher.onGetCancel(data,reqid)
+    #--------------------------------------------------------------------------------------------- 
+    def onGetQuitLogin(self, data, reqid):
+        try:
+            self.dispatcher.onGetQuitLogin(data,reqid)
+        except Exception as e:
+            pass
+        
 
 
         

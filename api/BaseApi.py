@@ -151,6 +151,50 @@ class BaseApi(object):
     def onGetLogin(self,data,reqid):
         """用户重载"""
         pass
+    
+    #--------------------------------------------------------------
+    #退出登录
+    def quitLogin(self,params):
+        data = {}
+        userName = params['username']
+        clientId = params['clientid']
+        try:
+            res = self.dll.JL_Out(clientId)
+            if res != '':
+                data['status'] = 'ok'
+                data['data'] = (userName,1)
+                return True,data
+            else:
+                data['status'] = 'fail'
+                data['data'] = (userName,0)
+                return True,data
+        except Exception as e:
+            return False,'fail'
+
+       
+
+    #--------------------------------------------------------------
+    def getQuitLogin(self,userName,clientId):
+        #获取退出登录信号
+        params = {
+                    'username':userName,
+                    'clientid':clientId
+                    }
+        func = self.quitLogin
+        callback = self.onGetQuitLogin
+        return self.addReq(params, func, callback)
+
+
+
+    
+    #--------------------------------------------------------------
+    def onGetQuitLogin(self,data,reqid):
+        """用户重载"""
+        pass
+
+    
+    
+    
 
     
     #--------------------------------------------------------------
@@ -228,7 +272,7 @@ class BaseApi(object):
         memset(ctypes.byref(output),0x0,1024*1024)
         try:
             self.dll.JL_SendOrder(clientId,
-                                  0,
+                                  stockSide,
                                   bytes(username,'ascii'),
                                   bytes(holderCode,'ascii'),
                                   bytes(stockCode,'ascii'),
@@ -279,6 +323,8 @@ if __name__ == "__main__":
                                          bytes('0', 'ascii'))
     ree = create_string_buffer(1024*1024)
     memset(ctypes.byref(ree),0x0,1024*1024)
+    out = tradeApi.dll.JL_Out(clientId)
+    print(clientId,out)
 #     status = tradeApi.dll.JL_SendOrder(clientId,
 #                                        0,
 #                                        bytes('50506031', 'ascii'),
@@ -289,14 +335,14 @@ if __name__ == "__main__":
 #                                        ree
 #                                        )
 #     status = tradeApi.dll.JL_QueryData(clientId,bytes('50506031','ascii'),104,ree)
-    status = tradeApi.dll.JL_CancelOrder(clientId,
-                                         bytes('50506031','ascii'),
-                                         bytes('102','ascii'),
-                                         1,
-                                         ree
-                                         )
-    print(status)
-    print(status,ree.value.decode('gbk'))
+#     status = tradeApi.dll.JL_CancelOrder(clientId,
+#                                          bytes('50506031','ascii'),
+#                                          bytes('102','ascii'),
+#                                          1,
+#                                          ree
+#                                          )
+#     print(status)
+#     print(status,ree.value.decode('gbk'))
 
 
 #     print(clientId)
